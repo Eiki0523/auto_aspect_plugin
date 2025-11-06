@@ -5,6 +5,12 @@ add_library(auto_aspect SHARED src/auto_aspect.cpp)
 
 target_compile_features(auto_aspect PRIVATE cxx_std_17)
 
+if (MSVC)
+    # スタティックランタイム (/MT) でリンクして VC 再頒布パッケージ不要にする
+    set_property(TARGET auto_aspect PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 target_compile_definitions(auto_aspect PRIVATE
     UNICODE
     _UNICODE
