@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2022   # VS2022入りのWindows
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
 
@@ -18,11 +18,13 @@ jobs:
         working-directory: auto_aspect_plugin
         run: cmake --build build --config Release
 
-      - name: Upload artifact (.aux2)
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: auto_aspect-plugin
           path: |
             auto_aspect_plugin/build/Release/*.aux2
+            auto_aspect_plugin/build/Release/*.auf2
+            auto_aspect_plugin/build/Release/*.aui2
             auto_aspect_plugin/build/Release/*.dll
             auto_aspect_plugin/build/Release/*.pdb
