@@ -363,12 +363,14 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID) {
 	return TRUE;
 }
 
-EXTERN_C __declspec(dllexport) bool InitializePlugin(DWORD) {
-	ensure_media_foundation_started();
-	return true;
+extern "C" __declspec(dllexport) BOOL InitializePlugin(DWORD) {
+	if (!ensure_media_foundation_started()) {
+		return FALSE;
+	}
+	return TRUE;
 }
 
-EXTERN_C __declspec(dllexport) void UninitializePlugin() {
+extern "C" __declspec(dllexport) void UninitializePlugin() {
 	g_stop_requested.store(true, std::memory_order_release);
 	if (g_worker.joinable()) {
 		g_worker.join();
@@ -378,22 +380,31 @@ EXTERN_C __declspec(dllexport) void UninitializePlugin() {
 	}
 }
 
-EXTERN_C __declspec(dllexport) void RegisterPlugin(HOST_APP_TABLE* host) {
+extern "C" __declspec(dllexport) BOOL RegisterPlugin(HOST_APP_TABLE* host) {
 	g_host = host;
 	if (!g_host) {
-		return;
+		return FALSE;
 	}
 
 	g_host->set_plugin_information(L"Auto Aspect Plugin 1.0");
 
 	g_edit_handle = g_host->create_edit_handle();
 	if (!g_edit_handle) {
-		return;
+		g_host = nullptr;
+		return FALSE;
 	}
 
 	g_pending_reset.store(true, std::memory_order_release);
 	g_host->register_project_load_handler(project_load_handler);
 
+	g_edit_handle->call_edit_section([](EDIT_SECTION* edit) {
+		if (edit && edit->output_log) {
+			edit->output_log(L"[auto_aspect] Loaded (RegisterPlugin)");
+		}
+	});
+
 	g_stop_requested.store(false, std::memory_order_release);
 	g_worker = std::thread(worker_routine);
+
+	return TRUE;
 }
