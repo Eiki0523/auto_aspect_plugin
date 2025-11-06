@@ -18,6 +18,24 @@ jobs:
         working-directory: auto_aspect_plugin
         run: cmake --build build --config Release
 
+      - name: Report exports & dependents
+        shell: cmd
+        working-directory: auto_aspect_plugin
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set VSPATH=%%i
+          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
+          dumpbin /exports build\Release\auto_aspect.aux2 > ..\exports.txt
+          dumpbin /dependents build\Release\auto_aspect.aux2 > ..\dependents.txt
+
+      - name: Upload dumpbin reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis
+          path: |
+            exports.txt
+            dependents.txt
+
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
